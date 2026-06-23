@@ -3,8 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 import StoreIcon from "@/assets/svgs/StoreIcon";
 import RoleGuard from "@/components/shared/RoleGuard";
-import { getRoleLabel, ROLE_COLORS } from "@/utils/roleLabel";
-import Badge from "@/components/ui/Badge";
+import UserCard from "@/components/shared/UserCard";
 
 const NAV_LINKS = {
   ADMIN: [
@@ -64,17 +63,9 @@ const AppLayout = () => {
           ))}
         </nav>
 
-        {/* User + logout */}
+        {/* User card (HOC withAuth injects currentUser) + logout */}
         <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-          {user && (
-            <div>
-              <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
-              <div className="mt-1">
-                <Badge label={getRoleLabel(user.role)} className={ROLE_COLORS[user.role]} />
-              </div>
-            </div>
-          )}
+          <UserCard />
           <button
             onClick={handleLogout}
             className="w-full text-left text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors py-1"
