@@ -1,0 +1,81 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// ENUM: Role
+enum Role {
+  ADMIN
+  NORMAL_USER
+  STORE_OWNER
+}
+
+
+// MODEL: User
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  address      String
+  role         Role     @default(NORMAL_USER)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+
+  ownedStores Store[]  @relation("StoreOwner")
+
+  ratings     Rating[]
+
+
+  @@index([role])
+  @@index([name])
+  @@index([email])
+  @@map("users")
+}
+
+
+// MODEL: Store
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  address   String
+  ownerId   String?  @map("owner_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+
+  owner   User?    @relation("StoreOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  ratings Rating[]
+
+
+  @@index([name])
+  @@index([address])
+  @@map("stores")
+}
+
+
+// MODEL: Rating
+
+model Rating {
+  id        String   @id @default(uuid())
+  value     Int
+  userId    String   @map("user_id")
+  storeId   String   @map("store_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  @@unique([userId, storeId])
+  @@index([storeId])
+  @@index([userId])
+  @@map("ratings")
+}

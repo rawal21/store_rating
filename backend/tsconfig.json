@@ -1,0 +1,56 @@
+{
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "rootDir": ".",
+        "outDir": "./dist",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "ignoreDeprecations": "6.0",
+        "paths": {
+            "@/*": [
+                "app/*"
+            ],
+            "@dto/*": [
+                "app/common/dto/*"
+            ],
+            "@helpers/*": [
+                "app/common/helper/*"
+            ],
+            "@services/*": [
+                "app/common/service/*"
+            ],
+            "@middlewares/*": [
+                "app/common/middleware/*"
+            ],
+            "@routes": [
+                "routes"
+            ],
+            "@routes/*": [
+                "routes/*"
+            ]
+        },
+        "types": [
+            "node"
+        ]
+    },
+    "ts-node": {
+        "require": [
+            "tsconfig-paths/register"
+        ]
+    },
+    "include": [
+        "app",
+        "server.ts",
+        "seed.ts",
+        "prisma.config.ts",
+        "routes"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
