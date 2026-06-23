@@ -52,7 +52,7 @@ export const createUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   address: addressSchema,
-  role: z.enum(["ADMIN", "NORMAL_USER", "STORE_OWNER"]).default("NORMAL_USER"),
+  role: z.enum(["ADMIN", "NORMAL_USER", "STORE_OWNER"]),
 });
 
 // ── Store schema ──────────────────────────────────────────────────────────────
