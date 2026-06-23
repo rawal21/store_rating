@@ -4,75 +4,72 @@ import PageLoader from "@/components/shared/PageLoader";
 import ProtectedRoute from "@/components/shared/ProtectedRoute";
 import PublicRoute from "@/components/shared/PublicRoute";
 import AuthLayout from "@/layouts/AuthLayout";
+import AppLayout from "@/layouts/AppLayout";
 import ToastContainer from "@/components/shared/ToastContainer";
 
-// ── Lazy-loaded pages ─────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 const Login       = lazy(() => import("@/pages/auth/Login"));
 const Register    = lazy(() => import("@/pages/auth/Register"));
 const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
 
-// Phase 3+ pages — placeholders until those phases are built
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-2xl font-bold text-gray-700 dark:text-gray-200">{title}</h1>
-      <p className="text-gray-400 mt-2">Coming in the next phase</p>
-    </div>
-  </div>
-);
+// ── Normal User ───────────────────────────────────────────────────────────────
+const Stores  = lazy(() => import("@/pages/user/Stores"));
+const Profile = lazy(() => import("@/pages/user/Profile"));
 
-const AdminDashboard  = lazy(() => Promise.resolve({ default: () => <PlaceholderPage title="Admin Dashboard" /> }));
-const StoresPage      = lazy(() => Promise.resolve({ default: () => <PlaceholderPage title="Stores" /> }));
-const OwnerDashboard  = lazy(() => Promise.resolve({ default: () => <PlaceholderPage title="Owner Dashboard" /> }));
+// ── Admin (Phase 5) ───────────────────────────────────────────────────────────
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminUsers     = lazy(() => import("@/pages/admin/AdminUsers"));
+const AdminStores    = lazy(() => import("@/pages/admin/AdminStores"));
 
-// ── App ───────────────────────────────────────────────────────────────────────
+// ── Store Owner (Phase 6) ─────────────────────────────────────────────────────
+const OwnerDashboard = lazy(() => import("@/pages/owner/OwnerDashboard"));
+
 const App = () => {
   return (
     <BrowserRouter>
       <ToastContainer />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* ── Public auth routes ── */}
+          {/* ── Public auth ── */}
           <Route element={<AuthLayout />}>
-            <Route
-              path="/login"
-              element={<PublicRoute><Login /></PublicRoute>}
-            />
-            <Route
-              path="/register"
-              element={<PublicRoute><Register /></PublicRoute>}
-            />
+            <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           </Route>
 
-          {/* ── Admin routes ── */}
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+          {/* ── App shell (all authenticated routes share AppLayout) ── */}
+          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
 
-          {/* ── Normal user routes ── */}
-          <Route
-            path="/stores"
-            element={
-              <ProtectedRoute allowedRoles={["NORMAL_USER", "ADMIN"]}>
-                <StoresPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Normal User */}
+            <Route
+              path="/stores"
+              element={
+                <ProtectedRoute allowedRoles={["NORMAL_USER", "ADMIN"]}>
+                  <Stores />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/profile" element={<Profile />} />
 
-          {/* ── Store owner routes ── */}
-          <Route
-            path="/owner/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={["STORE_OWNER"]}>
-                <OwnerDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin */}
+            <Route
+              path="/admin/dashboard"
+              element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminDashboard /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/users"
+              element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminUsers /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/stores"
+              element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminStores /></ProtectedRoute>}
+            />
+
+            {/* Store Owner */}
+            <Route
+              path="/owner/dashboard"
+              element={<ProtectedRoute allowedRoles={["STORE_OWNER"]}><OwnerDashboard /></ProtectedRoute>}
+            />
+          </Route>
 
           {/* ── Misc ── */}
           <Route path="/unauthorized" element={<Unauthorized />} />
