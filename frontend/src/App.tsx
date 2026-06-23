@@ -4,6 +4,7 @@ import PageLoader from "@/components/shared/PageLoader";
 import ProtectedRoute from "@/components/shared/ProtectedRoute";
 import PublicRoute from "@/components/shared/PublicRoute";
 import AuthLayout from "@/layouts/AuthLayout";
+import ToastContainer from "@/components/shared/ToastContainer";
 
 // ── Lazy-loaded pages ─────────────────────────────────────────────────────────
 const Login       = lazy(() => import("@/pages/auth/Login"));
@@ -28,6 +29,7 @@ const OwnerDashboard  = lazy(() => Promise.resolve({ default: () => <Placeholder
 const App = () => {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* ── Public auth routes ── */}

@@ -38,3 +38,8 @@ body {
   font-family: var(--font-sans);
   @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
 }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(1.5rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
