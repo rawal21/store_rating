@@ -15,57 +15,99 @@ export const createStore = async (data: IStoreCreate): Promise<IStore> => {
 };
 
 export const getStoreById = async (id: string): Promise<IStore | null> => {
-  return prisma.store.findUnique({ where: { id } });
+  return await prisma.store.findUnique({
+  where: { id },
+  include: {
+    ratings: {
+      select: {
+        id: true,
+        value: true,
+        userId: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    },
+  },
+});
 };
 
 export const getAllStores = async (): Promise<IStore[]> => {
-  return prisma.store.findMany({ orderBy: { createdAt: "desc" } });
+  return prisma.store.findMany({
+  include: {
+    ratings: {
+      select: {
+        id: true,
+        value: true,
+        userId: true,
+      },
+    } 
+  } ,
+   orderBy: { createdAt: "desc" } 
+});
 };
 
 /**
- * Filtered + sorted store list (admin dashboard, public listing).
+ * Filtered + sorted store list with pagination.
  */
-export const getFilteredStores = async (filters: {
-  name?: string;
-  email?: string;
-  address?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}): Promise<IStoreResponse[]> => {
-  const { name, email, address, sortBy = "createdAt", sortOrder = "desc" } = filters;
+export const getFilteredStores = async (
+  filters: {
+    name?: string;
+    email?: string;
+    address?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  },
+  requestingUserId?: string
+): Promise<{ data: IStoreResponse[]; total: number; page: number; limit: number; totalPages: number }> => {
+  const {
+    name, email, address,
+    sortBy = "createdAt", sortOrder = "desc",
+    page = 1, limit = 10,
+  } = filters;
 
   const allowedSortFields = ["name", "email", "address", "createdAt"];
   const orderField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
   const orderDir = sortOrder === "asc" ? "asc" : "desc";
 
-  const stores = await prisma.store.findMany({
-    where: {
-      ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
-      ...(email ? { email: { contains: email, mode: "insensitive" } } : {}),
-      ...(address ? { address: { contains: address, mode: "insensitive" } } : {}),
-    },
-    include: {
-      ratings: { select: { value: true } },
-    },
-    orderBy: { [orderField]: orderDir },
-  });
+  const where = {
+    ...(name    ? { name:    { contains: name,    mode: "insensitive" as const } } : {}),
+    ...(email   ? { email:   { contains: email,   mode: "insensitive" as const } } : {}),
+    ...(address ? { address: { contains: address, mode: "insensitive" as const } } : {}),
+  };
 
-  return stores.map((store) => {
+  const [total, stores] = await Promise.all([
+    prisma.store.count({ where }),
+    prisma.store.findMany({
+      where,
+      include: { ratings: { select: { id: true, value: true, userId: true } } },
+      orderBy: { [orderField]: orderDir },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  const data = stores.map((store) => {
     const ratings = store.ratings;
     const totalRatings = ratings.length;
-    const averageRating =
-      totalRatings > 0
-        ? Math.round((ratings.reduce((sum, r) => sum + r.value, 0) / totalRatings) * 10) / 10
-        : 0;
+    const averageRating = totalRatings > 0
+      ? Math.round((ratings.reduce((sum, r) => sum + r.value, 0) / totalRatings) * 10) / 10
+      : 0;
+    const userRatingRecord = requestingUserId ? ratings.find((r) => r.userId === requestingUserId) : null;
     const { ratings: _r, ...rest } = store;
-    return { ...rest, averageRating, totalRatings };
+    return { ...rest, averageRating, totalRatings, userRating: userRatingRecord?.value ?? null, userRatingId: userRatingRecord?.id ?? null };
   });
+
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
 export const getStoresByOwner = async (ownerId: string): Promise<IStore[]> => {
   return prisma.store.findMany({
     where: { ownerId },
     orderBy: { createdAt: "desc" },
+    include : {ratings : true}
   });
 };
 
@@ -89,6 +131,7 @@ export const getStoreWithRatings = async (
     include: {
       ratings: {
         select: {
+          id: true,
           value: true,
           userId: true,
         },
@@ -99,22 +142,37 @@ export const getStoreWithRatings = async (
   if (!store) return null;
 
   const ratings = store.ratings;
+
   const totalRatings = ratings.length;
+
   const averageRating =
     totalRatings > 0
-      ? Math.round((ratings.reduce((sum, r) => sum + r.value, 0) / totalRatings) * 10) / 10
+      ? Math.round(
+          (ratings.reduce((sum, r) => sum + r.value, 0) /
+            totalRatings) *
+            10
+        ) / 10
       : 0;
 
-  const userRating = requestingUserId
-    ? ratings.find((r) => r.userId === requestingUserId)?.value ?? null
-    : undefined;
+  const userRatingRecord = requestingUserId
+    ? ratings.find((r) => r.userId === requestingUserId)
+    : null;
+
+  const userRating = userRatingRecord?.value ?? null;
+  const userRatingId = userRatingRecord?.id ?? null;
 
   const { ratings: _r, ...rest } = store;
+
   return {
     ...rest,
     averageRating,
     totalRatings,
-    ...(requestingUserId !== undefined ? { userRating } : {}),
+    ...(requestingUserId !== undefined
+      ? {
+          userRating,
+          userRatingId,
+        }
+      : {}),
   };
 };
 

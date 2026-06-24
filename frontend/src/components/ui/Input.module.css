@@ -28,9 +28,8 @@
 
 .errorMsg { font-size: 0.75rem; color: #ef4444; }
 
-/* Dark */
-@media (prefers-color-scheme: dark) {
-  .label  { color: #d1d5db; }
-  .input  { background: #1f2937; border-color: #374151; color: #f9fafb; }
-  .input:focus { border-color: #3b82f6; }
-}
+/* ── Dark mode — class-based ─────────────────────────────────────────────── */
+:global(.dark) .label  { color: #d1d5db; }
+:global(.dark) .input  { background: #1f2937; border-color: #374151; color: #f9fafb; }
+:global(.dark) .input:focus { border-color: #3b82f6; }
+:global(.dark) .input::placeholder { color: #6b7280; }

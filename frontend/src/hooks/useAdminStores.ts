@@ -4,8 +4,16 @@ import { useToast } from "./useToast";
 import { getErrorMessage } from "@/utils/apiError";
 import type { IStore, StoreFilters } from "@/types";
 
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const useAdminStores = (filters: StoreFilters) => {
   const [stores, setStores] = useState<IStore[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -13,7 +21,9 @@ export const useAdminStores = (filters: StoreFilters) => {
     setLoading(true);
     try {
       const res = await storesApi.getAll(filters);
-      setStores(res.data.data);
+      const result = res.data.data;
+      setStores(result.data);
+      setPagination({ total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -24,5 +34,5 @@ export const useAdminStores = (filters: StoreFilters) => {
 
   useEffect(() => { void fetch(); }, [fetch]);
 
-  return { stores, loading, refetch: fetch };
+  return { stores, pagination, loading, refetch: fetch };
 };

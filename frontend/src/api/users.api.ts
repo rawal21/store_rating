@@ -1,5 +1,5 @@
 import { api } from "./axios.instance";
-import type { ApiResponse, IUser, IUserCreate, UserFilters } from "@/types";
+import type { ApiResponse, PaginatedResponse, IUser, IUserCreate, UserFilters } from "@/types";
 
 export const usersApi = {
   getMe: () =>
@@ -9,7 +9,7 @@ export const usersApi = {
     api.put<ApiResponse<null>>("/users/me/password", data),
 
   getAll: (filters?: UserFilters) =>
-    api.get<ApiResponse<IUser[]>>("/users", { params: filters }),
+    api.get<ApiResponse<PaginatedResponse<IUser>>>("/users", { params: filters }),
 
   getById: (id: string) =>
     api.get<ApiResponse<IUser>>(`/users/${id}`),

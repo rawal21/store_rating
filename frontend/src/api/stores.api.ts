@@ -1,9 +1,9 @@
 import { api } from "./axios.instance";
-import type { ApiResponse, IStore, IStoreCreate, IOwnerDashboardStore, StoreFilters } from "@/types";
+import type { ApiResponse, PaginatedResponse, IStore, IStoreCreate, IOwnerDashboardStore, StoreFilters } from "@/types";
 
 export const storesApi = {
   getAll: (filters?: StoreFilters) =>
-    api.get<ApiResponse<IStore[]>>("/stores", { params: filters }),
+    api.get<ApiResponse<PaginatedResponse<IStore>>>("/stores", { params: filters }),
 
   getById: (id: string) =>
     api.get<ApiResponse<IStore>>(`/stores/${id}`),

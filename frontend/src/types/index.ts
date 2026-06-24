@@ -8,6 +8,14 @@ export interface ApiResponse<T = unknown> {
   data: T;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface ApiError {
   success: false;
   error_code: number;
@@ -24,7 +32,8 @@ export interface IUser {
   role: Role;
   createdAt: string;
   updatedAt: string;
-  averageRating?: number; // only for STORE_OWNER
+  averageRating?: number;  // STORE_OWNER only
+  stores?: { id: string; name: string; totalRatings: number }[]; // STORE_OWNER only
 }
 
 export interface IUserCreate {
@@ -61,7 +70,8 @@ export interface IStore {
   ownerId: string | null;
   averageRating?: number;
   totalRatings?: number;
-  userRating?: number | null; // authenticated user's own rating
+  userRating?: number | null;   // authenticated user's own rating value
+  userRatingId?: string | null; // rating ID needed to edit
   createdAt: string;
   updatedAt: string;
 }
@@ -110,6 +120,9 @@ export interface IDashboardStats {
   totalUsers: number;
   totalStores: number;
   totalRatings: number;
+  roleChart: { role: string; count: number }[];
+  ratingDistribution: { star: number; count: number }[];
+  topRatedStores: { name: string; averageRating: number; totalRatings: number }[];
 }
 
 // ── Query params ──────────────────────────────────────────────────────────────
@@ -122,6 +135,8 @@ export interface UserFilters {
   role?: Role;
   sortBy?: "name" | "email" | "address" | "role" | "createdAt";
   sortOrder?: SortOrder;
+  page?: number;
+  limit?: number;
 }
 
 export interface StoreFilters {
@@ -130,4 +145,6 @@ export interface StoreFilters {
   address?: string;
   sortBy?: "name" | "email" | "address" | "createdAt";
   sortOrder?: SortOrder;
+  page?: number;
+  limit?: number;
 }

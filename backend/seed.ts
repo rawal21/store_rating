@@ -78,11 +78,13 @@ async function main() {
   console.log(`✅  Normal user:      ${bob.email}  (password: User@12345)`);
 
   // ── 4. Stores ───────────────────────────────────────────────────────────────
-  const store1 = await prisma.store.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000001" },
-    update: {},
-    create: {
-      id: "00000000-0000-0000-0000-000000000001",
+  // Delete old stores (if any) and recreate with correct UUIDs
+  await prisma.rating.deleteMany({});   // ratings FK must go first
+  await prisma.store.deleteMany({});
+
+  const store1 = await prisma.store.create({
+    data: {
+      id: "44d4a4bf-d872-4179-8a73-3595c71f6e47",
       name: "Best Groceries",
       email: "contact@bestgroceries.com",
       address: "45 Market Lane, Springfield",
@@ -91,11 +93,9 @@ async function main() {
   });
   console.log(`✅  Store:            ${store1.name}`);
 
-  const store2 = await prisma.store.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000002" },
-    update: {},
-    create: {
-      id: "00000000-0000-0000-0000-000000000002",
+  const store2 = await prisma.store.create({
+    data: {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       name: "Tech Gadgets Superstore",
       email: "info@techgadgets.com",
       address: "99 Silicon Blvd, Techville",

@@ -4,8 +4,16 @@ import { useToast } from "./useToast";
 import { getErrorMessage } from "@/utils/apiError";
 import type { IUser, UserFilters } from "@/types";
 
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const useAdminUsers = (filters: UserFilters) => {
   const [users, setUsers] = useState<IUser[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -13,7 +21,9 @@ export const useAdminUsers = (filters: UserFilters) => {
     setLoading(true);
     try {
       const res = await usersApi.getAll(filters);
-      setUsers(res.data.data);
+      const result = res.data.data;
+      setUsers(result.data);
+      setPagination({ total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -24,5 +34,5 @@ export const useAdminUsers = (filters: UserFilters) => {
 
   useEffect(() => { void fetch(); }, [fetch]);
 
-  return { users, loading, refetch: fetch };
+  return { users, pagination, loading, refetch: fetch };
 };

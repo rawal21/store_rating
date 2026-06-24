@@ -4,12 +4,16 @@ import { useToast } from "./useToast";
 import { getErrorMessage } from "@/utils/apiError";
 import type { IStore, StoreFilters } from "@/types";
 
-/**
- * Custom hook — fetches and manages the store list with filters + sorting.
- * Exposes refetch so rating changes can trigger a fresh load.
- */
+interface StoresPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const useStores = (filters: StoreFilters) => {
   const [stores, setStores] = useState<IStore[]>([]);
+  const [pagination, setPagination] = useState<StoresPagination>({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -17,7 +21,9 @@ export const useStores = (filters: StoreFilters) => {
     setLoading(true);
     try {
       const res = await storesApi.getAll(filters);
-      setStores(res.data.data);
+      const result = res.data.data;
+      setStores(result.data);
+      setPagination({ total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -28,5 +34,5 @@ export const useStores = (filters: StoreFilters) => {
 
   useEffect(() => { void fetch(); }, [fetch]);
 
-  return { stores, loading, refetch: fetch };
+  return { stores, pagination, loading, refetch: fetch };
 };

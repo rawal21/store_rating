@@ -56,31 +56,34 @@ export const getFilteredUsers = async (filters: {
   role?: string;
   sortBy?: string;
   sortOrder?: string;
-}): Promise<Omit<IUser, "passwordHash">[]> => {
-  const { name, email, address, role, sortBy = "createdAt", sortOrder = "desc" } = filters;
+  page?: number;
+  limit?: number;
+}): Promise<{ data: Omit<IUser, "passwordHash">[]; total: number; page: number; limit: number; totalPages: number }> => {
+  const { name, email, address, role, sortBy = "createdAt", sortOrder = "desc", page = 1, limit = 10 } = filters;
 
   const allowedSortFields = ["name", "email", "address", "role", "createdAt"];
   const orderField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
   const orderDir = sortOrder === "asc" ? "asc" : "desc";
 
-  return prisma.user.findMany({
-    where: {
-      ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
-      ...(email ? { email: { contains: email, mode: "insensitive" } } : {}),
-      ...(address ? { address: { contains: address, mode: "insensitive" } } : {}),
-      ...(role ? { role: role as any } : {}),
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      address: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: { [orderField]: orderDir },
-  }) as Promise<Omit<IUser, "passwordHash">[]>;
+  const where = {
+    ...(name ? { name: { contains: name, mode: "insensitive" as const } } : {}),
+    ...(email ? { email: { contains: email, mode: "insensitive" as const } } : {}),
+    ...(address ? { address: { contains: address, mode: "insensitive" as const } } : {}),
+    ...(role ? { role: role as any } : {}),
+  };
+
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      select: { id: true, name: true, email: true, address: true, role: true, createdAt: true, updatedAt: true },
+      orderBy: { [orderField]: orderDir },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  return { data: users as Omit<IUser, "passwordHash">[], total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
 /**
@@ -119,7 +122,15 @@ export const getUserByIdWithRating = async (id: string) => {
         ? Math.round((allRatings.reduce((a, b) => a + b, 0) / allRatings.length) * 10) / 10
         : 0;
     const { ownedStores, ...rest } = user;
-    return { ...rest, averageRating };
+    return {
+      ...rest,
+      averageRating,
+      stores: ownedStores.map((s) => ({
+        id: s.id,
+        name: s.name,
+        totalRatings: s.ratings.length,
+      })),
+    };
   }
 
   const { ownedStores, ...rest } = user;

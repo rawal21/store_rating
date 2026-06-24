@@ -1,12 +1,15 @@
 .wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
+  background: #fff;
 }
 
 .table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -34,6 +37,7 @@
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f3f4f6;
   color: #374151;
+  background: #fff;
 }
 
 .tr:last-child .td { border-bottom: none; }
@@ -43,13 +47,13 @@
   text-align: center;
   padding: 3rem 1rem;
   color: #9ca3af;
+  background: #fff;
 }
 
-/* Dark */
-@media (prefers-color-scheme: dark) {
-  .wrapper { border-color: #374151; }
-  .th { background: #111827; color: #9ca3af; border-color: #374151; }
-  .thSortable:hover { color: #f9fafb; background: #1f2937; }
-  .td { color: #d1d5db; border-color: #1f2937; }
-  .tr:hover .td { background: #111827; }
-}
+/* ── Dark mode — class-based ─────────────────────────────────────────────── */
+:global(.dark) .wrapper { border-color: #374151; background: #111827; }
+:global(.dark) .th { background: #111827; color: #9ca3af; border-color: #374151; }
+:global(.dark) .thSortable:hover { color: #f9fafb; background: #1f2937; }
+:global(.dark) .td { color: #d1d5db; border-color: #1f2937; background: #111827; }
+:global(.dark) .tr:hover .td { background: #1f2937; }
+:global(.dark) .empty { background: #111827; color: #6b7280; }

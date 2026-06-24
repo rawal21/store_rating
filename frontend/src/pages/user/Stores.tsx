@@ -4,13 +4,15 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useStores } from "@/hooks/useStores";
 import { useAuth } from "@/hooks/useAuth";
 import Table, { type Column } from "@/components/ui/Table";
+import Pagination from "@/components/ui/Pagination";
 import StarRating from "@/components/shared/StarRating";
 import RatingModal from "@/components/shared/RatingModal";
 import Button from "@/components/ui/Button";
 import type { IStore, SortOrder } from "@/types";
 
-// Table requires Record<string, unknown> — extend IStore with index signature
 type StoreRow = IStore & Record<string, unknown>;
+
+const PAGE_SIZE = 10;
 
 const Stores = () => {
   usePageTitle("Stores");
@@ -18,53 +20,45 @@ const Stores = () => {
   const { user } = useAuth();
   const isNormalUser = user?.role === "NORMAL_USER";
 
-  // ── Search (debounced) ────────────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
 
-  // ── Sorting ───────────────────────────────────────────────────────────────
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [page, setPage] = useState(1);
 
+  // Reset to page 1 on search/sort change
   const handleSort = (key: string) => {
     setSortOrder((prev) => (sortBy === key ? (prev === "asc" ? "desc" : "asc") : "asc"));
     setSortBy(key);
+    setPage(1);
   };
 
-  // ── Data ──────────────────────────────────────────────────────────────────
-  const { stores, loading, refetch } = useStores({
+  const { stores, pagination, loading, refetch } = useStores({
     name: debouncedSearch || undefined,
     address: debouncedSearch || undefined,
     sortBy: sortBy as "name" | "email" | "address" | "createdAt",
     sortOrder,
+    page,
+    limit: PAGE_SIZE,
   });
 
-  // ── Rating modal ──────────────────────────────────────────────────────────
-  const [ratingModal, setRatingModal] = useState<{
-    open: boolean;
-    store: IStore | null;
-  }>({ open: false, store: null });
-
+  const [ratingModal, setRatingModal] = useState<{ open: boolean; store: IStore | null }>({ open: false, store: null });
   const openRating = (store: IStore) => setRatingModal({ open: true, store });
   const closeRating = () => setRatingModal({ open: false, store: null });
 
-  // ── Columns (render props) ────────────────────────────────────────────────
   const columns: Column<StoreRow>[] = [
     {
       key: "name",
       header: "Store Name",
       sortable: true,
-      render: (row) => (
-        <span className="font-medium text-gray-900 dark:text-white">{String(row.name)}</span>
-      ),
+      render: (row) => <span className="font-medium text-gray-900 dark:text-white">{String(row.name)}</span>,
     },
     {
       key: "address",
       header: "Address",
       sortable: true,
-      render: (row) => (
-        <span className="text-gray-500 dark:text-gray-400 text-xs">{String(row.address)}</span>
-      ),
+      render: (row) => <span className="text-gray-500 dark:text-gray-400 text-xs">{String(row.address)}</span>,
     },
     {
       key: "averageRating",
@@ -83,68 +77,54 @@ const Stores = () => {
         );
       },
     },
-    ...(isNormalUser
-      ? [
-          {
-            key: "userRating",
-            header: "Your Rating",
-            sortable: false,
-            render: (row: StoreRow) => {
-              const val = typeof row.userRating === "number" ? row.userRating : null;
-              return val ? (
-                <StarRating value={val} readOnly size={16} />
-              ) : (
-                <span className="text-xs text-gray-400">Not rated</span>
-              );
-            },
-          } satisfies Column<StoreRow>,
-          {
-            key: "actions",
-            header: "Action",
-            sortable: false,
-            render: (row: StoreRow) => {
-              const store = row as unknown as IStore;
-              return (
-                <Button
-                  variant={store.userRating ? "outline" : "primary"}
-                  size="sm"
-                  onClick={() => openRating(store)}
-                >
-                  {store.userRating ? "Edit rating" : "Rate"}
-                </Button>
-              );
-            },
-          } satisfies Column<StoreRow>,
-        ]
-      : []),
+    ...(isNormalUser ? [
+      {
+        key: "userRating",
+        header: "Your Rating",
+        sortable: false,
+        render: (row: StoreRow) => {
+          const val = typeof row.userRating === "number" ? row.userRating : null;
+          return val
+            ? <StarRating value={val} readOnly size={16} />
+            : <span className="text-xs text-gray-400">Not rated</span>;
+        },
+      } satisfies Column<StoreRow>,
+      {
+        key: "actions",
+        header: "Action",
+        sortable: false,
+        render: (row: StoreRow) => {
+          const store = row as unknown as IStore;
+          return (
+            <Button variant={store.userRating ? "outline" : "primary"} size="sm" onClick={() => openRating(store)}>
+              {store.userRating ? "Edit rating" : "Rate"}
+            </Button>
+          );
+        },
+      } satisfies Column<StoreRow>,
+    ] : []),
   ];
-
-  const rows = stores as StoreRow[];
 
   return (
     <div className="space-y-5">
-      {/* Header + Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Stores</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Browse and rate registered stores
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Browse and rate registered stores</p>
         </div>
         <input
           type="search"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by name or address…"
           className="w-full sm:w-72 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Search stores"
         />
       </div>
 
-      {/* Table */}
       <Table<StoreRow>
         columns={columns}
-        data={rows}
+        data={stores as StoreRow[]}
         loading={loading}
         sortBy={sortBy}
         sortOrder={sortOrder}
@@ -152,13 +132,21 @@ const Stores = () => {
         emptyMessage="No stores found"
       />
 
-      {/* Rating modal — state lifted from here to trigger refetch */}
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        onPageChange={setPage}
+      />
+
       {ratingModal.store && (
         <RatingModal
           open={ratingModal.open}
           onClose={closeRating}
           storeId={ratingModal.store.id}
           storeName={ratingModal.store.name}
+          existingRatingId={ratingModal.store.userRatingId}
           existingValue={ratingModal.store.userRating ?? 0}
           onSuccess={refetch}
         />

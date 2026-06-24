@@ -1,0 +1,124 @@
+/* wrapper takes full width by default — caller controls size via className prop */
+.wrapper { position: relative; width: 100%; }
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 0;          /* prevents flex children from overflowing */
+}
+.trigger:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.trigger.error { border-color: #ef4444; }
+.trigger.error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+
+/* selected label truncates on small containers */
+.trigger span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: #9ca3af;
+  transition: transform 0.15s;
+}
+.chevronOpen { transform: rotate(180deg); }
+
+/* Options panel — absolute, full width of trigger, scrollable */
+.options {
+  position: absolute;
+  z-index: 9999;
+  width: 100%;
+  min-width: 10rem;        /* never narrower than 160px even in tight containers */
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 0.25rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: dropIn 0.12s ease;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.option:hover,
+.optionFocused { background: #f9fafb; }
+.optionSelected { font-weight: 600; color: #2563eb; }
+
+.checkIcon { width: 1rem; height: 1rem; color: #2563eb; flex-shrink: 0; }
+
+.errorMsg { font-size: 0.75rem; color: #ef4444; margin-top: 0.25rem; }
+
+/* ── Loading state ────────────────────────────────────────────────────────── */
+.triggerLoading { cursor: not-allowed; opacity: 0.7; }
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.spinner {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid #d1d5db;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes dropIn  { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Dark mode — class-based (.dark on <html>) ───────────────────────────── */
+:global(.dark) .trigger  { background: #1f2937; border-color: #374151; color: #f9fafb; }
+:global(.dark) .trigger:focus { border-color: #3b82f6; }
+:global(.dark) .options  { background: #1f2937; border-color: #374151; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+:global(.dark) .option   { color: #d1d5db; }
+:global(.dark) .option:hover,
+:global(.dark) .optionFocused { background: #111827; }
+:global(.dark) .optionSelected { color: #60a5fa; }
+:global(.dark) .checkIcon { color: #60a5fa; }

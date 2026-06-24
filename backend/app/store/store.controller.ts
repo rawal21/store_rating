@@ -7,9 +7,12 @@ import type { IStoreCreate, IStoreUpdate } from "./store.dto";
 
 // GET /api/stores  (public)
 export const getAllStores = expressAsyncHandler(async (req: AuthRequest, res) => {
-  const { name, email, address, sortBy, sortOrder } = req.query as Record<string, string>;
-  const stores = await storeService.getFilteredStores({ name, email, address, sortBy, sortOrder });
-  res.send(createResponse(stores));
+  const { name, email, address, sortBy, sortOrder, page, limit } = req.query as Record<string, string>;
+  const result = await storeService.getFilteredStores(
+    { name, email, address, sortBy, sortOrder, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 10 },
+    req.user?.id
+  );
+  res.send(createResponse(result));
 });
 
 // GET /api/stores/:id  (public – optionally authenticated)

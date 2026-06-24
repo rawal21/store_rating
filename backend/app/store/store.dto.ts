@@ -29,4 +29,5 @@ export interface IStoreResponse extends BaseDto {
   averageRating?: number;
   totalRatings?: number;
   userRating?: number | null;  // The authenticated user's own rating, if any
+  id : string
 }

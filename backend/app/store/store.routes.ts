@@ -20,8 +20,12 @@ import type { AuthRequest } from "@/common/middleware/auth.middleware";
 
 const router = Router();
 
-// ── Public ────────────────────────────────────────────────────────────────────
-router.get("/", listStoresQueryValidation, catchError, getAllStores);
+// ── Public + optional auth (list — attaches userRating when token present) ───
+router.get("/", listStoresQueryValidation, catchError, (req: Request, res: Response, next: NextFunction) => {
+  authenticateJwt(req as AuthRequest, res, (_err: unknown) => {
+    return getAllStores(req as AuthRequest, res, next);
+  });
+});
 
 // ── Store Owner only ──────────────────────────────────────────────────────────
 // These must be declared before /:id to avoid being matched as a UUID param

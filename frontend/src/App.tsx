@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoader from "@/components/shared/PageLoader";
 import ProtectedRoute from "@/components/shared/ProtectedRoute";
 import PublicRoute from "@/components/shared/PublicRoute";
@@ -9,6 +9,7 @@ import AppLayout from "@/layouts/AppLayout";
 import ToastContainer from "@/components/shared/ToastContainer";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
+const Landing      = lazy(() => import("@/pages/Landing"));
 const Login        = lazy(() => import("@/pages/auth/Login"));
 const Register     = lazy(() => import("@/pages/auth/Register"));
 const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
@@ -85,7 +86,7 @@ const App = () => {
             {/* ── Misc ── */}
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/404"          element={<NotFound />} />
-            <Route path="/"             element={<Navigate to="/login" replace />} />
+            <Route path="/"             element={<PublicRoute><Landing /></PublicRoute>} />
             <Route path="*"             element={<NotFound />} />
           </Routes>
         </Suspense>

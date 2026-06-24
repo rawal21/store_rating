@@ -82,9 +82,13 @@ export const updatePassword = expressAsyncHandler(async (req: AuthRequest, res) 
 
 // GET /api/users  (ADMIN only)
 export const getAllUsers = expressAsyncHandler(async (req: AuthRequest, res) => {
-  const { name, email, address, role, sortBy, sortOrder } = req.query as Record<string, string>;
-  const users = await userService.getFilteredUsers({ name, email, address, role, sortBy, sortOrder });
-  res.send(createResponse(users));
+  const { name, email, address, role, sortBy, sortOrder, page, limit } = req.query as Record<string, string>;
+  const result = await userService.getFilteredUsers({
+    name, email, address, role, sortBy, sortOrder,
+    page: page ? Number(page) : 1,
+    limit: limit ? Number(limit) : 10,
+  });
+  res.send(createResponse(result));
 });
 
 // GET /api/users/:id  (ADMIN or self)

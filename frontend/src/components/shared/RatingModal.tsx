@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import StarRating from "./StarRating";
 import Button from "@/components/ui/Button";
@@ -9,15 +9,11 @@ interface RatingModalProps {
   onClose: () => void;
   storeName: string;
   storeId: string;
-  existingRatingId?: string;   // if set → edit mode
+  existingRatingId?: string | null; // set → edit mode
   existingValue?: number;
-  onSuccess: () => void;       // state lifting — parent refreshes after submit
+  onSuccess: () => void;
 }
 
-/**
- * Modal for submitting or editing a store rating.
- * Demonstrates state lifting — onSuccess tells parent to refetch.
- */
 const RatingModal = ({
   open,
   onClose,
@@ -28,6 +24,12 @@ const RatingModal = ({
   onSuccess,
 }: RatingModalProps) => {
   const [value, setValue] = useState(existingValue);
+
+  // Reset stars every time modal opens with fresh data
+  useEffect(() => {
+    if (open) setValue(existingValue);
+  }, [open, existingValue]);
+
   const { submitRating, editRating, loading } = useRating(() => {
     onSuccess();
     onClose();
@@ -51,9 +53,7 @@ const RatingModal = ({
       title={isEdit ? "Update your rating" : "Rate this store"}
       maxWidth="22rem"
     >
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        {storeName}
-      </p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{storeName}</p>
 
       <div className="flex justify-center mb-6">
         <StarRating value={value} onChange={setValue} size={36} />
@@ -67,12 +67,7 @@ const RatingModal = ({
         <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
           Cancel
         </Button>
-        <Button
-          size="sm"
-          onClick={handleSubmit}
-          disabled={value === 0}
-          loading={loading}
-        >
+        <Button size="sm" onClick={handleSubmit} disabled={value === 0} loading={loading}>
           {isEdit ? "Update" : "Submit"}
         </Button>
       </div>
